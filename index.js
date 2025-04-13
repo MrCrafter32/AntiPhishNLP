@@ -1,5 +1,4 @@
 const express = require('express');
-const { pipeline } = require('@xenova/transformers');
 
 const app = express();
 app.use(express.json());
@@ -7,7 +6,16 @@ app.use(express.json());
 let classifier;
 
 async function initializeModel() {
-    classifier = await pipeline('text-classification', 'mrcrafter32/AntiPhishX-BERT');
+    try {
+        console.log("Starting model initialization...");
+        const { pipeline } = await import('@xenova/transformers');
+        console.log("Transformers library imported.");
+        classifier = await pipeline('text-classification', 'mrcrafter32/AntiPhishX-BERT');
+        console.log("Model initialized successfully.");
+    } catch (error) {
+        console.error('Failed to initialize model:', error);
+        // Handle error, e.g., set a flag to indicate model initialization failure
+    }
 }
 
 initializeModel();
@@ -17,6 +25,10 @@ app.post('/predict', async (req, res) => {
 
     if (!email_text) {
         return res.status(400).json({ error: 'No email text provided' });
+    }
+
+    if (!classifier) {
+        return res.status(500).json({ error: 'Model not initialized' });
     }
 
     try {
