@@ -10,11 +10,17 @@ async function initializeModel() {
         console.log("Starting model initialization...");
         const { pipeline } = await import('@xenova/transformers');
         console.log("Transformers library imported.");
-        classifier = await pipeline('text-classification', 'mrcrafter32/AntiPhishX-BERT');
+        classifier = await pipeline('text-classification', 'mrcrafter32/AntiPhishX-BERT', {
+            progress_callback: (details) => {
+                console.log(`${details.progress * 100}% ${details.status}`);
+            }
+        });
         console.log("Model initialized successfully.");
     } catch (error) {
         console.error('Failed to initialize model:', error);
-        // Handle error, e.g., set a flag to indicate model initialization failure
+        if (error.cause && error.cause.message) {
+            console.error('Model download error:', error.cause.message); // Log the underlying error
+        }
     }
 }
 
